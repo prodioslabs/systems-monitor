@@ -1,13 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { FaMemory } from 'react-icons/fa'
 import ProgressBar from 'components/progress-bar'
-import { ResponsiveContainer, AreaChart, Area, YAxis } from 'recharts'
 import { bytesToHumanReadable } from 'utils/size'
 import { Result } from 'antd'
-import { useQueue } from 'hooks/use-queue'
-import { colors } from 'utils/colors'
+import TimelineChart, { TimelineChartHandle } from 'components/timeline-chart'
 import { getMemoryInfo } from '../queries'
 
 type MemoryInfoProps = {
@@ -16,11 +14,12 @@ type MemoryInfoProps = {
 }
 
 export default function MemoryInfo({ className, style }: MemoryInfoProps) {
-  const { data: queueData, push } = useQueue(20, 0)
+  const timelineChart = useRef<TimelineChartHandle>(null)
+
   const { isLoading, isError, data } = useQuery(['memory', 'info'], getMemoryInfo, {
-    refetchInterval: 1000,
+    refetchInterval: 2000,
     onSuccess: (dataFetched) => {
-      push(dataFetched.used)
+      timelineChart.current?.pushData(dataFetched.used)
     },
   })
 
@@ -49,29 +48,7 @@ export default function MemoryInfo({ className, style }: MemoryInfoProps) {
     if (data) {
       return (
         <div className="grid grid-cols-6 items-center gap-4">
-          <div className="col-span-6 h-[24px]">
-            <ResponsiveContainer>
-              <AreaChart
-                data={queueData.map((item, index) => ({ value: item, index }))}
-                margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
-              >
-                <defs>
-                  <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={colors.primary} stopOpacity={0.4} />
-                    <stop offset="95%" stopColor={colors.primary} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <Area
-                  dataKey="value"
-                  isAnimationActive={false}
-                  dot={false}
-                  fill="url(#chartGradient)"
-                  stroke={colors.primary}
-                />
-                <YAxis hide dataKey="value" domain={['dataMin', 'dataMax']} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+          <TimelineChart className="col-span-6" numPoints={30} delta={2000} ref={timelineChart} />
           <div>Memory</div>
           <div className="col-span-3 flex-1 space-y-1">
             <ProgressBar progress={(data.active / data.total) * 100} />
@@ -97,7 +74,7 @@ export default function MemoryInfo({ className, style }: MemoryInfoProps) {
     }
 
     return null
-  }, [data, isLoading, isError, queueData])
+  }, [data, isLoading, isError])
 
   return (
     <div

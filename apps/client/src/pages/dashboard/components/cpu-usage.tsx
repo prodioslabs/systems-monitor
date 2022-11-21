@@ -1,11 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
 import ProgressBar from 'components/progress-bar'
-import { useQueue } from 'hooks/use-queue'
-import { useMemo } from 'react'
+import TimelineChart, { TimelineChartHandle } from 'components/timeline-chart'
+import { useMemo, useRef } from 'react'
 import { BsCpu } from 'react-icons/bs'
-import { Area, AreaChart, ResponsiveContainer, YAxis } from 'recharts'
-import { colors } from 'utils/colors'
 import { getCpuUsage } from '../queries'
 
 type CpuUsageProps = {
@@ -14,12 +12,12 @@ type CpuUsageProps = {
 }
 
 export default function CpuUsage({ className, style }: CpuUsageProps) {
-  const { data: queueData, push } = useQueue(20, 0)
+  const timelineChart = useRef<TimelineChartHandle>(null)
 
   const { data } = useQuery(['cpu', 'usage'], getCpuUsage, {
     refetchInterval: 2000,
     onSuccess: (dataFetched) => {
-      push(dataFetched.avgLoad)
+      timelineChart.current?.pushData(dataFetched.avgLoad)
     },
   })
 
@@ -27,29 +25,7 @@ export default function CpuUsage({ className, style }: CpuUsageProps) {
     if (data) {
       return (
         <div className="space-y-4">
-          <div className="h-[24px]">
-            <ResponsiveContainer>
-              <AreaChart
-                data={queueData.map((item, index) => ({ value: item, index }))}
-                margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
-              >
-                <defs>
-                  <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={colors.primary} stopOpacity={0.4} />
-                    <stop offset="95%" stopColor={colors.primary} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <Area
-                  dataKey="value"
-                  isAnimationActive={false}
-                  dot={false}
-                  fill="url(#chartGradient)"
-                  stroke={colors.primary}
-                />
-                <YAxis hide dataKey="value" domain={['dataMin', 'dataMax']} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+          <TimelineChart numPoints={30} delta={2000} ref={timelineChart} />
           <div className="flex items-center justify-between rounded bg-gray-700 p-2">
             <span>Average CPU Load</span>
             <span className="font-mono">{data.currentLoad.toFixed(2)}%</span>
@@ -70,7 +46,7 @@ export default function CpuUsage({ className, style }: CpuUsageProps) {
     }
 
     return null
-  }, [data, queueData])
+  }, [data])
 
   return (
     <div
