@@ -1,0 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-900;
+  }
+
+  * {
+    @apply font-sans;
+  }
+}
+
+@layer components {
+  .skeleton-container {
+    @apply text-gray-600 animate-pulse;
+  }
+
+  .skeleton-item {
+    @apply bg-current rounded-md;
+  }
+}

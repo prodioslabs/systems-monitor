@@ -1,0 +1,14 @@
+{
+  "gray": {
+    "600": "#393B40",
+    "700": "#2E2F34",
+    "800": "#27292E",
+    "900": "#1F2023"
+  },
+  "primary": "#3b82f6",
+  "accent": "#eab308",
+  "warning": "#ca8a04",
+  "error": "#ef4444",
+  "text-primary": "#fafafa",
+  "text-secondary": "#a3a3a3"
+}
